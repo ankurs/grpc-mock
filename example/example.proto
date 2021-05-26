@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package com.example;
+
+option go_package = "github.com/ankurs/grpc-mock/example";
+
+service ExampleService {
+  rpc Echo(EchoRequest) returns (EchoResponse){}
+}
+
+message EchoRequest {
+  string msg = 1;
+}
+
+message EchoResponse {
+  string resp = 1;
+}
