@@ -5,13 +5,12 @@ package example
 import (
 	context "context"
 	json "encoding/json"
-
-	server "github.com/ankurs/grpc-mock/server"
+	mocker "github.com/ankurs/grpc-mock/mocker"
 )
 
 // ExampleService
 type mockExampleService struct {
-	server.MockServer // embedding mock server interface
+	mocker.MockServer // embedding mock server interface
 }
 
 // method -- Echo
@@ -32,6 +31,6 @@ func (m *mockExampleService) Echo(ctx context.Context, input *EchoRequest) (*Ech
 	return output, nil
 }
 
-func MakeMockExampleServiceServer(mock server.MockServer) ExampleServiceServer {
+func MakeMockExampleServiceServer(mock mocker.MockServer) ExampleServiceServer {
 	return &mockExampleService{mock}
 }

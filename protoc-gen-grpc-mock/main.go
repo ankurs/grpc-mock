@@ -46,7 +46,7 @@ func getMockServer(g *protogen.GeneratedFile) string {
 	return g.QualifiedGoIdent(
 		protogen.GoIdent{
 			GoName:       "MockServer",
-			GoImportPath: protogen.GoImportPath("github.com/ankurs/grpc-mock/server"),
+			GoImportPath: protogen.GoImportPath("github.com/ankurs/grpc-mock/mocker"),
 		},
 	)
 }
@@ -84,13 +84,16 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) {
 		g.P("}")
 		g.P()
 		for _, m := range svc.Methods {
-			if m.Desc.IsStreamingClient() || m.Desc.IsStreamingServer() {
-				continue
-			}
 			ctx := getCtx(g)
 			g.P("// method -- ", m.GoName)
 			input := g.QualifiedGoIdent(m.Input.GoIdent)
 			output := g.QualifiedGoIdent(m.Output.GoIdent)
+			if m.Desc.IsStreamingClient() || m.Desc.IsStreamingServer() {
+				g.P(fmt.Sprintf("func (m *%s) %s(_ %s_%sServer) error {", sName, m.GoName, svc.GoName, m.GoName))
+				g.P("return nil")
+				g.P("}")
+				continue
+			}
 			g.P(fmt.Sprintf("func (m *%s) %s(ctx %s, input *%s) (*%s, error) {", sName, m.GoName, ctx, input, output))
 			mar := getMarshalPkg(g)
 			g.P("req, err := ", mar, "(input)")
