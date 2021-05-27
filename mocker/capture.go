@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-coldbrew/log"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -82,10 +81,10 @@ func write(ch chan<- Config, infoMethod string, req, resp interface{}, err error
 		Response: make(map[string]interface{}),
 	}
 
-	reqData, _ := protojson.Marshal(req.(proto.Message))
+	reqData, _ := json.Marshal(req.(proto.Message))
 	json.Unmarshal(reqData, &c.Request)
 
-	respData, _ := protojson.Marshal(resp.(proto.Message))
+	respData, _ := json.Marshal(resp.(proto.Message))
 	json.Unmarshal(respData, &c.Response)
 
 	if err != nil {

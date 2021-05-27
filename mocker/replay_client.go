@@ -6,12 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-	"reflect"
 	"strings"
 
-	"github.com/go-coldbrew/log"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -29,9 +26,9 @@ func (m *mockClient) Invoke(ctx context.Context, infoMethod string, args interfa
 	svc, met := getSvcMethod(infoMethod)
 	key := lookupKey(svc, met)
 
-	log.Info(ctx, "msg", "checking for", "key", key, "info", infoMethod)
+	//log.Info(ctx, "msg", "checking for", "key", key, "info", infoMethod)
 	if list, ok := m.cfg[key]; ok {
-		log.Info(ctx, "msg", "found", "key", key, "info", infoMethod)
+		//log.Info(ctx, "msg", "found", "key", key, "info", infoMethod)
 		for _, l := range list {
 			if l.Error != "" {
 				return errors.New(l.Error)
@@ -41,8 +38,8 @@ func (m *mockClient) Invoke(ctx context.Context, infoMethod string, args interfa
 			}
 			if r, ok := reply.(proto.Message); ok {
 				d, _ := json.Marshal(l.Response)
-				err := protojson.Unmarshal(d, r)
-				log.Info(ctx, "req", args, "reply", r, "d", len(d), "err", err, "type", reflect.TypeOf(reply), "kind", reflect.TypeOf(reply).Kind())
+				err := json.Unmarshal(d, r)
+				//log.Info(ctx, "req", args, "reply", r, "d", len(d), "err", err, "type", reflect.TypeOf(reply), "kind", reflect.TypeOf(reply).Kind())
 				if err != nil {
 					continue
 				}
