@@ -13,3 +13,8 @@ type MockServer interface {
 type MockClient interface {
 	grpc.ClientConnInterface
 }
+
+type Mocker interface {
+	MockServer
+	MockClient
+}

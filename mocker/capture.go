@@ -53,8 +53,8 @@ func MockingInterceptor(filePath string) grpc.UnaryClientInterceptor {
 func writer(f *os.File, ch <-chan Config) {
 	w := bufio.NewWriter(f)
 	for c := range ch {
-		cData, _ := json.Marshal(c)
-		_, err := w.WriteString(string(cData) + "\n")
+		cData, _ := json.MarshalIndent(c, "", "  ")
+		_, err := w.WriteString(string(cData) + sep)
 		if err != nil {
 			log.Error(context.Background(), err)
 		}
