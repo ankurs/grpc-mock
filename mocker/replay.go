@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/go-coldbrew/log"
 	"google.golang.org/grpc"
 )
 
@@ -47,13 +46,12 @@ func (m *mockClient) matchRequest(ctx context.Context, infoMethod string, reques
 		//log.Info(ctx, "msg", "found", "key", key, "info", infoMethod)
 		for _, l := range list {
 			if reflect.DeepEqual(l.Request, req) {
-				log.Info(ctx, "Yay DeepEqual", "req", req, "req", l.Request)
+				if l.Error != "" {
+					return []byte{}, errors.New(l.Error)
+				}
+				d, _ := json.Marshal(l.Response)
+				return d, nil
 			}
-			if l.Error != "" {
-				return []byte{}, errors.New(l.Error)
-			}
-			d, _ := json.Marshal(l.Response)
-			return d, nil
 		}
 	}
 	return []byte{}, errors.New("could not find requst")
