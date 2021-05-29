@@ -22,7 +22,7 @@ type mockClient struct {
 }
 
 func lookupKey(svc, met string) string {
-	return svc + ":" + met
+	return svc + "/" + met
 }
 
 // Invoke performs a unary RPC and returns after the response is received
@@ -45,16 +45,17 @@ func (m *mockClient) matchRequest(ctx context.Context, infoMethod string, reques
 	if list, ok := m.cfg[key]; ok {
 		//log.Info(ctx, "msg", "found", "key", key, "info", infoMethod)
 		for _, l := range list {
-			if reflect.DeepEqual(l.Request, req) {
+			if l.Request == nil || reflect.DeepEqual(l.Request, req) {
 				if l.Error != "" {
 					return []byte{}, errors.New(l.Error)
 				}
 				d, _ := json.Marshal(l.Response)
 				return d, nil
 			}
+			//log.Info(ctx, "not found", key, "config", l.Request, "req", req)
 		}
 	}
-	return []byte{}, errors.New("could not find requst")
+	return []byte{}, errors.New("could not find requst for: " + key)
 }
 
 func (m *mockClient) Serve(ctx context.Context, svc, method string, request []byte) ([]byte, error) {
