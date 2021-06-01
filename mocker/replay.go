@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"os"
 	"reflect"
 	"strings"
@@ -28,12 +30,12 @@ func lookupKey(svc, met string) string {
 // Invoke performs a unary RPC and returns after the response is received
 // into reply.
 func (m *mockClient) Invoke(ctx context.Context, infoMethod string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
-	req, _ := json.Marshal(args)
+	req, _ := protojson.Marshal(args.(proto.Message))
 	resp, err := m.matchRequest(ctx, infoMethod, req)
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(resp, reply)
+	return protojson.Unmarshal(resp, reply.(proto.Message))
 }
 
 func (m *mockClient) matchRequest(ctx context.Context, infoMethod string, request []byte) ([]byte, error) {

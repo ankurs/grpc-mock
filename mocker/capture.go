@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"google.golang.org/protobuf/encoding/protojson"
 	"os"
 	"strings"
 	"sync"
@@ -81,10 +82,10 @@ func write(ch chan<- Config, infoMethod string, req, resp interface{}, err error
 		Response: make(map[string]interface{}),
 	}
 
-	reqData, _ := json.Marshal(req.(proto.Message))
+	reqData, _ := protojson.Marshal(req.(proto.Message))
 	json.Unmarshal(reqData, &c.Request)
 
-	respData, _ := json.Marshal(resp.(proto.Message))
+	respData, _ := protojson.Marshal(resp.(proto.Message))
 	json.Unmarshal(respData, &c.Response)
 
 	if err != nil {
