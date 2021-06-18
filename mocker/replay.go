@@ -35,6 +35,10 @@ func (m *mockClient) Invoke(ctx context.Context, infoMethod string, args interfa
 	if err != nil {
 		return err
 	}
+	// []byte{110, 117, 108, 108} == "null"
+	if bytes.Compare(resp, []byte{110, 117, 108, 108}) == 0 {
+		return nil
+	}
 	return protojson.Unmarshal(resp, reply.(proto.Message))
 }
 
