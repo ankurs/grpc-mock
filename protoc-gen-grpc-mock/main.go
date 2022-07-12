@@ -28,7 +28,7 @@ func getMarshalPkg(g *protogen.GeneratedFile) string {
 	return g.QualifiedGoIdent(
 		protogen.GoIdent{
 			GoName:       "Marshal",
-			GoImportPath: protogen.GoImportPath("encoding/json"),
+			GoImportPath: protogen.GoImportPath("google.golang.org/protobuf/encoding/protojson"),
 		},
 	)
 }
@@ -37,7 +37,7 @@ func getUnmarshalPkg(g *protogen.GeneratedFile) string {
 	return g.QualifiedGoIdent(
 		protogen.GoIdent{
 			GoName:       "Unmarshal",
-			GoImportPath: protogen.GoImportPath("encoding/json"),
+			GoImportPath: protogen.GoImportPath("google.golang.org/protobuf/encoding/protojson"),
 		},
 	)
 }

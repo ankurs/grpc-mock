@@ -6,13 +6,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 	"os"
 	"reflect"
 	"strings"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -30,7 +30,10 @@ func lookupKey(svc, met string) string {
 // Invoke performs a unary RPC and returns after the response is received
 // into reply.
 func (m *mockClient) Invoke(ctx context.Context, infoMethod string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
-	req, _ := protojson.Marshal(args.(proto.Message))
+	req, err := protojson.Marshal(args.(proto.Message))
+	if err != nil {
+		return err
+	}
 	resp, err := m.matchRequest(ctx, infoMethod, req)
 	if err != nil {
 		return err
@@ -46,7 +49,10 @@ func (m *mockClient) matchRequest(ctx context.Context, infoMethod string, reques
 	svc, met := getSvcMethod(infoMethod)
 	key := lookupKey(svc, met)
 	req := make(map[string]interface{})
-	json.Unmarshal(request, &req)
+	err := json.Unmarshal(request, &req)
+	if err != nil {
+		return []byte{}, err
+	}
 	//log.Info(ctx, "msg", "checking for", "key", key, "info", infoMethod)
 	if list, ok := m.cfg[key]; ok {
 		//log.Info(ctx, "msg", "found", "key", key, "info", infoMethod)
@@ -56,6 +62,7 @@ func (m *mockClient) matchRequest(ctx context.Context, infoMethod string, reques
 					return []byte{}, errors.New(l.Error)
 				}
 				d, _ := json.Marshal(l.Response)
+				//log.Info(ctx, "returning", string(d))
 				return d, nil
 			}
 			//log.Info(ctx, "not found", key, "config", l.Request, "req", req)
@@ -65,7 +72,7 @@ func (m *mockClient) matchRequest(ctx context.Context, infoMethod string, reques
 }
 
 func (m *mockClient) Serve(ctx context.Context, svc, method string, request []byte) ([]byte, error) {
-	return m.matchRequest(ctx, method, request)
+	return m.matchRequest(ctx, lookupKey(svc, method), request)
 }
 
 // NewStream begins a streaming RPC.
