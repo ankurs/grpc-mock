@@ -6,9 +6,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math/rand"
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -20,7 +22,8 @@ const (
 )
 
 type mockClient struct {
-	cfg map[string][]Config
+	cfg     map[string][]Config
+	options options
 }
 
 func lookupKey(svc, met string) string {
@@ -72,6 +75,15 @@ func (m *mockClient) matchRequest(ctx context.Context, infoMethod string, reques
 }
 
 func (m *mockClient) Serve(ctx context.Context, svc, method string, request []byte) ([]byte, error) {
+	if m.options.MaxDelay > m.options.MinDelay {
+		// do request delay
+		min := int64(m.options.MinDelay / time.Millisecond)
+		max := int64(m.options.MaxDelay / time.Millisecond)
+		if max > min {
+			r := rand.Int63n(max-min) + min
+			time.Sleep(time.Duration(r) * time.Millisecond)
+		}
+	}
 	return m.matchRequest(ctx, lookupKey(svc, method), request)
 }
 
@@ -80,7 +92,7 @@ func (m *mockClient) NewStream(ctx context.Context, desc *grpc.StreamDesc, metho
 	panic("not implemented") // TODO: Implement
 }
 
-func NewMocker(filePath string) (Mocker, error) {
+func NewMocker(filePath string, opts ...option) (Mocker, error) {
 	if !strings.HasPrefix(filePath, string(os.PathSeparator)) {
 		dir, err := os.Getwd()
 		if err != nil {
@@ -109,6 +121,9 @@ func NewMocker(filePath string) (Mocker, error) {
 		key := lookupKey(cfg.Service, cfg.Method)
 		c.cfg[key] = append(c.cfg[key], cfg)
 		//log.Info(context.Background(), "loaded", key, "data", cfg)
+	}
+	for _, opt := range opts {
+		opt(&c.options)
 	}
 	return c, nil
 }
