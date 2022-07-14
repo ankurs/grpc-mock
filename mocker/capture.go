@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"google.golang.org/protobuf/encoding/protojson"
 	"os"
 	"strings"
 	"sync"
+
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/go-coldbrew/log"
 	"google.golang.org/grpc"
@@ -20,6 +21,7 @@ type Config struct {
 	Service  string                 `json:"service"`
 	Method   string                 `json:"method"`
 	Error    string                 `json:"error"`
+	Ignore   []string               `json:"ignore"`
 }
 
 var (

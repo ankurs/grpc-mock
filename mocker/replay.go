@@ -8,10 +8,11 @@ import (
 	"errors"
 	"math/rand"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
+	"github.com/go-coldbrew/log"
+	"github.com/google/go-cmp/cmp"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -60,13 +61,32 @@ func (m *mockClient) matchRequest(ctx context.Context, infoMethod string, reques
 	if list, ok := m.cfg[key]; ok {
 		//log.Info(ctx, "msg", "found", "key", key, "info", infoMethod)
 		for _, l := range list {
-			if l.Request == nil || reflect.DeepEqual(l.Request, req) {
+			ignore := l.Ignore
+			opt := cmp.FilterPath(func(path cmp.Path) bool {
+				s := path.GoString()
+				s = strings.ReplaceAll(s, "root[\"", "root.")
+				s = strings.ReplaceAll(s, "[\"", "")
+				s = strings.ReplaceAll(s, "\"]", "")
+				s = strings.ReplaceAll(s, "([]interface {})", "")
+				s = strings.ReplaceAll(s, "(map[string]interface {})", "")
+				//log.Info(ctx, "msg", "matching path", "s", s, "ignore", ignore)
+				for _, p := range ignore {
+					if p == s {
+						//log.Info(ctx, "msg", "ignoring path", "path", s)
+						return true
+					}
+				}
+				return false
+			}, cmp.Ignore())
+			if l.Request == nil || cmp.Equal(l.Request, req, opt) {
 				if l.Error != "" {
 					return []byte{}, errors.New(l.Error)
 				}
 				d, _ := json.Marshal(l.Response)
 				//log.Info(ctx, "returning", string(d))
 				return d, nil
+			} else {
+				log.Error(ctx, "diff", cmp.Diff(l.Request, req, opt))
 			}
 			//log.Info(ctx, "not found", key, "config", l.Request, "req", req)
 		}
@@ -120,7 +140,7 @@ func NewMocker(filePath string, opts ...option) (Mocker, error) {
 		}
 		key := lookupKey(cfg.Service, cfg.Method)
 		c.cfg[key] = append(c.cfg[key], cfg)
-		//log.Info(context.Background(), "loaded", key, "data", cfg)
+		log.Info(context.Background(), "loaded", key, "data", cfg)
 	}
 	for _, opt := range opts {
 		opt(&c.options)
